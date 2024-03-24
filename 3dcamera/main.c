@@ -3,6 +3,7 @@
 #include <time.h>
 
 #include <raylib.h>
+#include <rcamera.h>
 #include <raymath.h>
 
 #define SCREEN_WIDTH        900
@@ -11,7 +12,7 @@
 
 #define WINDOW_TITLE        "3D Camera"
 
-#define CAMERA_SPEED        1
+#define CAMERA_SPEED        0.8f
 
 void drawAxis()
 {
@@ -26,9 +27,7 @@ void drawAxis()
 
 void drawWalls()
 {
-    DrawCube(Vector3Zero(), 90, 90, 0, BLUE);
-    DrawCube(Vector3Zero(), 0, 90, 90, DARKBLUE);
-    DrawCube(Vector3Zero(), 90, 0, 90, DARKGREEN);
+    DrawPlane(Vector3Zero(), (Vector2){20.0f, 20.0f}, GRAY);
 }
 
 void drawCoords(Camera *camera)
@@ -43,29 +42,6 @@ void resetCameraPosition(Camera *camera)
     camera->position.x = 0;
     camera->position.y = 0;
     camera->position.z = 4;
-}
-
-void checkDirection(double *horizontalDir, double *verticalDir)
-{
-    if (*horizontalDir > 360)
-    {
-        *horizontalDir = 0;
-    }
-
-    if (*horizontalDir < 0)
-    {
-        *horizontalDir = 360;
-    }
-
-    if (*verticalDir > 180)
-    {
-        *verticalDir = 180;
-    }
-
-    if (*verticalDir < -180)
-    {
-        *verticalDir = -180;
-    }
 }
 
 int main()
@@ -86,6 +62,8 @@ int main()
         .projection = CAMERA_PERSPECTIVE
     };
 
+    DisableCursor();
+
     double horizontalDir = 0.0f;
     double verticalDir = 0.0f;
 
@@ -93,6 +71,7 @@ int main()
     {
 
         frameDelta = GetFrameTime();
+        //UpdateCamera(&mainCamera, CAMERA_FREE);
 
         BeginDrawing();
             ClearBackground(DARKGRAY);
@@ -101,26 +80,13 @@ int main()
                 drawAxis();
                 drawWalls();
                 DrawCube(Vector3Zero(), 1.0, 1.0, 1.0, YELLOW);
-                checkDirection(&horizontalDir, &verticalDir);
 
-                //if (IsKeyDown(KEY_W)) mainCamera.position.x += CAMERA_SPEED * frameDelta;
-                //if (IsKeyDown(KEY_S)) mainCamera.position.x -= CAMERA_SPEED * frameDelta;
-                //if (IsKeyDown(KEY_A)) mainCamera.position.y += CAMERA_SPEED * frameDelta;
-                //if (IsKeyDown(KEY_D)) mainCamera.position.y -= CAMERA_SPEED * frameDelta;
                 if (IsKeyPressed(KEY_R)) resetCameraPosition(&mainCamera);
-
-
-                if (IsKeyDown(KEY_W)) verticalDir += CAMERA_SPEED * frameDelta * 30;
-                if (IsKeyDown(KEY_S)) verticalDir -= CAMERA_SPEED * frameDelta * 30;
-                if (IsKeyDown(KEY_D)) horizontalDir += CAMERA_SPEED * frameDelta * 30;
-                if (IsKeyDown(KEY_A)) horizontalDir -= CAMERA_SPEED * frameDelta * 30;
-
-                mainCamera.target.x = CAMERA_SPEED * sin((horizontalDir) * DEG2RAD) * cos((verticalDir) * DEG2RAD);
-                mainCamera.target.y = CAMERA_SPEED * sin((horizontalDir) * DEG2RAD) * sin((verticalDir) * DEG2RAD);
-                mainCamera.target.z = CAMERA_SPEED * cos((horizontalDir) * DEG2RAD);
-                printf("Horizontal: %f\n", horizontalDir);
-                printf("Vertical: %f\n", verticalDir);
-
+                if (IsKeyDown(KEY_W)) CameraMoveForward(&mainCamera, CAMERA_SPEED, 1);
+                if (IsKeyDown(KEY_A)) CameraMoveRight(&mainCamera, -CAMERA_SPEED, 1);
+                if (IsKeyDown(KEY_S)) CameraMoveForward(&mainCamera, -CAMERA_SPEED, 1);
+                if (IsKeyDown(KEY_D)) CameraMoveRight(&mainCamera, CAMERA_SPEED, 1);
+                if (IsKeyDown(KEY_SPACE)) CameraMoveUp(&mainCamera, CAMERA_SPEED);
             EndMode3D();
 
             drawCoords(&mainCamera);
