@@ -4,12 +4,34 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <rcamera.h>
+#include <rlgl.h>
 
 #define SCREEN_WIDTH        1600
 #define SCREEN_HEIGHT       900
 #define MAX_FPS             60
 
 #define WINDOW_TITLE        "Isometric"
+
+typedef struct Player
+{
+    Vector3 pos;
+    float direction;
+
+} Player;
+
+void checkPlayerDirection (Player *player)
+{
+    if (player->direction >= 360)
+    {
+        player->direction = 0;
+    }
+
+    if (player->direction < 0)
+    {
+        player->direction = 360;
+    }
+}
+
 
 void drawAxis()
 {
@@ -22,24 +44,19 @@ void drawAxis()
     DrawLine3D(Vector3Zero(), (Vector3){0, 0, -90}, WHITE);
 }
 
-void handleInput(Camera3D *camera)
+void handleInput(Player *player)
 {
-    if (IsKeyDown(KEY_W))
-    {
-        camera->position.z += 1;
-    }
-    if (IsKeyDown(KEY_S))
-    {
-        camera->position.z -= 1;
-    }
+    checkPlayerDirection(player);
 
-    if (IsKeyDown(KEY_RIGHT))
+    if (IsKeyDown(KEY_A))
     {
-        camera->target.x += 1;
+        player->direction -= 1;
+        printf("dir: %f\n", player->direction);
     }
-    if (IsKeyDown(KEY_LEFT))
+    if (IsKeyDown(KEY_D))
     {
-        camera->target.x -= 1;
+        player->direction += 1;
+        printf("dir: %f\n", player->direction);
     }
 }
 
@@ -62,6 +79,11 @@ int main()
         .projection = CAMERA_PERSPECTIVE
     };
 
+    Player p1 = {
+        .pos = {.x = 0, .y = 0, .z = 2},
+        .direction = 0
+    };
+
     while(!WindowShouldClose())
     {
         BeginDrawing();
@@ -71,9 +93,14 @@ int main()
             DrawPlane((Vector3){0, 0, 0}, (Vector2){90, 90}, BROWN);
             drawAxis();
             DrawGrid(90, 10);
-            DrawCube((Vector3){0, 0, 2}, 2, 2, 2, BLUE);
 
-            handleInput(&mainCamera);
+            rlPushMatrix();
+            rlTranslatef(5, 5, 5);
+            rlRotatef(p1.direction, 0, 1, 0);
+            DrawCube(p1.pos, 2, 2, 2, BLUE);
+            rlPopMatrix();
+
+            handleInput(&p1);
 
         EndMode3D();
         EndDrawing();
